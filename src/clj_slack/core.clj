@@ -3,39 +3,52 @@
    [clj-http.client :as http]
    [cheshire.core :as cheshire]))
 
-(def ^:dynamic *error-handler*
+;; Connection
+
+(defrecord Connection [api-url tokens error-handler log-handler])
+
+(defn- default-error-handler
   "Error handler for all slack requests. It takes error msg
   and the context of an error. Can be redefined with bind."
-  (fn [msg ctx] (throw (ex-info msg ctx))))
+  [msg ctx]
+  (throw (ex-info (str "Error on Slack API request: " msg) ctx)))
 
 (defn- verify-api-url
-  [connection]
+  [api-url]
   (assert
-   (and (string? (:api-url connection))
-        (and (seq (:api-url connection))
-             (not (nil? (re-find #"^https?:\/\/" (:api-url connection))))))
-   (str "clj-slack: API URL is not valid. :api-url has to be a valid URL (https://slack.com/api usually), but is " (pr-str (:api-url connection)))))
+   (and (string? api-url)
+        (re-find #"^https?:\/\/" api-url))
+   (str "clj-slack: API URL is not valid. :api-url has to be a valid URL (https://slack.com/api usually), but is " (pr-str api-url))))
+
+(defn connection
+  "Creates connection used for all Slack API functions."
+  ([api-url tokens]
+   (connection api-url tokens {}))
+  ([api-url tokens {:keys [error-handler log-handler]
+                    :or {error-handler default-error-handler
+                         log-handler println}}]
+   (verify-api-url api-url)
+   (->Connection api-url tokens error-handler log-handler)))
+
+;; HTTP calls
 
 (defn- endpoint-url
   "Returns full URL of Slack method"
   [connection endpoint]
-  (verify-api-url connection)
   (str (:api-url connection) "/" endpoint))
+
+(defn- stringify-keys
+  "Creates a new map whose keys are all strings."
+  [m]
+  (into {} (for [[k v] m]
+             (if (keyword? k)
+               [(name k) v]
+               [(str k) v]))))
 
 (defn- send-request
   "Sends a GET http request with formatted params"
   [url params]
-  (let [response (http/get url {:query-params params})]
-    (if-let [body (:body response)]
-      (cheshire/parse-string body true)
-      (*error-handler* (:error response) {:url url
-                                          :params params}))))
-
-(defn- send-post-request
-  "Sends a POST http request with formatted params"
-  [url multiparts]
-  (let [response (http/post url {:multipart multiparts})]
-    (cheshire/parse-string (:body response) true)))
+  (http/get url {:query-params (stringify-keys params)}))
 
 (defn- build-multiparts
   "Builds an http-kit multiparts sequence"
@@ -45,43 +58,46 @@
       {:name k :content v :filename (.getName v) :encoding "UTF-8"}
       {:name k :content v :encoding "UTF-8"})))
 
-(defn stringify-keys
-  "Creates a new map whose keys are all strings."
-  [m]
-  (into {} (for [[k v] m]
-             (if (keyword? k)
-               [(name k) v]
-               [(str k) v]))))
+(defn- send-post-request
+  "Sends a POST http request with formatted params"
+  [url params]
+  (http/post url {:multipart (->> params
+                                  stringify-keys
+                                  build-multiparts)}))
+
+(defn- handle-http-response [response connection]
+  (if-let [body (:body response)]
+    (cheshire/parse-string body true)
+    ((:error-handler connection) (:error response) {:response response})))
+
+(defn- handle-slack-response [response connection endpoint query]
+  (if (:ok response)
+    response
+    ((:error-handler connection) (:error response) {:endpoint endpoint
+                                                    :query query
+                                                    :response response})))
 
 (defn slack-request
-  ([connection endpoint]
-   (slack-request connection endpoint {}))
-  ([connection endpoint query]
-   (let [url (endpoint-url connection endpoint)]
-     (send-request url (stringify-keys query)))))
+  ([sender connection endpoint]
+   (slack-request connection sender endpoint {}))
+  ([sender connection endpoint query]
+   (assert (instance? Connection connection))
+   ((:log-handler connection) endpoint query)
+   (-> (endpoint-url connection endpoint)
+       (sender (stringify-keys query))
+       (handle-http-response connection)
+       (handle-slack-response connection endpoint query))))
 
-(defn slack-post-request
-  [connection endpoint post-params]
-  (let [url (endpoint-url connection endpoint)
-        multiparts-params (->> post-params
-                               stringify-keys
-                               build-multiparts)]
-    (send-post-request url multiparts-params)))
-
-(defn- req
-  ([token-key requestor connection endpoint]
-   (req token-key requestor connection endpoint {}))
-  ([token-key requestor connection endpoint query]
+(defn- authorized-request
+  ([token-key sender connection endpoint]
+   (authorized-request token-key sender connection endpoint {}))
+  ([token-key sender connection endpoint query]
    (let [token (some-> connection :tokens token-key)]
      (assert token (str token-key " not defined in connection tokens"))
-     (let [resp (requestor connection endpoint (assoc query :token token))]
-       (if (:ok resp)
-         resp
-         (*error-handler* (:error resp) {:endpoint endpoint
-                                         :query query
-                                         :response resp}))))))
+     (slack-request sender connection endpoint (assoc query :token token)))))
 
-(def app-request (partial req :app slack-request))
-(def app-post-request (partial req :app slack-post-request))
-(def bot-request (partial req :bot slack-request))
-(def bot-post-request (partial req :bot slack-post-request))
+(def app-request (partial authorized-request :app send-request))
+(def app-post-request (partial authorized-request :app send-post-request))
+
+(def bot-request (partial authorized-request :bot send-request))
+(def bot-post-request (partial authorized-request :bot send-post-request))
