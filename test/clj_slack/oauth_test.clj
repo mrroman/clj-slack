@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [clj-slack.oauth :refer :all]))
 
-(def connection (clj-slack.core/connection "https://slack.com/api" {}))
+(def connection (clj-slack.core/create-connection "https://slack.com/api" {}))
 
 (def client-id (System/getenv "CLIENT_ID"))
 (def client-secret (System/getenv "CLIENT_SECRET"))

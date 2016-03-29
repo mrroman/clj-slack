@@ -1,11 +1,12 @@
 (ns clj-slack.core
-  (:require
-   [clj-http.client :as http]
-   [cheshire.core :as cheshire]))
+  (:require [cheshire.core :as cheshire]
+            [clj-http
+             [client :as http]
+             [conn-mgr :as conn-mgr]]))
 
 ;; Connection
 
-(defrecord Connection [api-url tokens error-handler log-handler])
+(defrecord Connection [api-url tokens error-handler log-handler pool])
 
 (defn- default-error-handler
   "Error handler for all slack requests. It takes error msg
@@ -20,15 +21,23 @@
         (re-find #"^https?:\/\/" api-url))
    (str "clj-slack: API URL is not valid. :api-url has to be a valid URL (https://slack.com/api usually), but is " (pr-str api-url))))
 
-(defn connection
+(defn create-connection
   "Creates connection used for all Slack API functions."
   ([api-url tokens]
-   (connection api-url tokens {}))
-  ([api-url tokens {:keys [error-handler log-handler]
+   (create-connection api-url tokens {}))
+  ([api-url tokens {:keys [error-handler log-handler pool]
                     :or {error-handler default-error-handler
-                         log-handler println}}]
+                         log-handler println
+                         pool (conn-mgr/make-reusable-conn-manager {:timeout 2
+                                                                    :thread 3})}}]
    (verify-api-url api-url)
-   (->Connection api-url tokens error-handler log-handler)))
+   (->Connection api-url tokens error-handler log-handler pool)))
+
+(defn close
+  "Closes connection to Slack."
+  [connection]
+  (when-let [cm (:pool connection)]
+    (clj-http.conn-mgr/shutdown-manager cm)))
 
 ;; HTTP calls
 
@@ -47,8 +56,9 @@
 
 (defn- send-request
   "Sends a GET http request with formatted params"
-  [url params]
-  (http/get url {:query-params (stringify-keys params)}))
+  [connection url params]
+  (http/get url {:query-params (stringify-keys params)
+                 :connection-manager (:pool connection)}))
 
 (defn- build-multiparts
   "Builds an http-kit multiparts sequence"
@@ -60,10 +70,13 @@
 
 (defn- send-post-request
   "Sends a POST http request with formatted params"
-  [url params]
+  [connection url params]
   (http/post url {:multipart (->> params
                                   stringify-keys
-                                  build-multiparts)}))
+                                  build-multiparts)
+                  :connection-manager (:pool connection)}))
+
+;; Slack calls
 
 (defn- handle-http-response [response connection]
   (if-let [body (:body response)]
@@ -83,10 +96,14 @@
   ([sender connection endpoint query]
    (assert (instance? Connection connection))
    ((:log-handler connection) endpoint query)
-   (-> (endpoint-url connection endpoint)
-       (sender (stringify-keys query))
-       (handle-http-response connection)
-       (handle-slack-response connection endpoint query))))
+   (let [response (sender connection
+                          (endpoint-url connection endpoint)
+                          (stringify-keys query))]
+     (-> response
+         (handle-http-response connection)
+         (handle-slack-response connection endpoint query)))))
+
+;; Authorized requests
 
 (defn- authorized-request
   ([token-key sender connection endpoint]
@@ -96,8 +113,18 @@
      (assert token (str token-key " not defined in connection tokens"))
      (slack-request sender connection endpoint (assoc query :token token)))))
 
-(def app-request (partial authorized-request :app send-request))
-(def app-post-request (partial authorized-request :app send-post-request))
+(def app-request
+  "Request which will be authorized with :app token"
+  (partial authorized-request :app send-request))
 
-(def bot-request (partial authorized-request :bot send-request))
-(def bot-post-request (partial authorized-request :bot send-post-request))
+(def app-post-request
+  "Multipart request which will be authorized with :app token"
+  (partial authorized-request :app send-post-request))
+
+(def bot-request
+  "Request which will be authorized with :bot token"
+  (partial authorized-request :bot send-request))
+
+(def bot-post-request
+  "Multipart request which will be authorized with :bot token"
+  (partial authorized-request :bot send-post-request))

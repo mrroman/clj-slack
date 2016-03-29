@@ -16,17 +16,20 @@ This is on [Clojars](https://clojars.org/mrroman/clj-slack). Just add ```[mrroma
 
 Get your access token [here](https://api.slack.com/web).
 
-Your need to create a connection with ```(clj-slack.core/connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})``` and pass it as the first argument of every functions in clj-slack. Almost every call needs APP TOKEN. Only rtm/start needs BOT TOKEN. You can use your test token for both of these tokens. Of course you can change api-url for debugging or testing purposes.
+Your need to create a connection with ```(clj-slack.core/create-connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})``` and pass it as the first argument of every functions in clj-slack. Almost every call needs APP TOKEN. Only rtm/start needs BOT TOKEN. You can use your test token for both of these tokens. Of course you can change api-url for debugging or testing purposes.
 
-clj-slack will throw an Exception if the connection map you're trying to use is not valid.
+The connection has to be closed with ```(clj-slack.core/close connection)``` function. It is necessary because connection is created with its own connection pool.
+
+clj-slack will throw an Exception if the connection you're trying to use is not valid.
 
 Example:
 ```clojure
 (require 'clj-slack.core)
 (require 'clj-slack.users)
 
-(def connection (clj-slack.core/connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
+(def connection (clj-slack.core/create-connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
 (clj-slack.users/list connection)
+(clj-slack.core/stop connection)
 ```
 
 You can use optional params described in [Slack API](https://api.slack.com/methods) by passing them through a map.
@@ -34,8 +37,9 @@ You can use optional params described in [Slack API](https://api.slack.com/metho
 (require 'clj-slack.core)
 (require 'clj-slack.stars)
 
-(def connection (clj-slack.core/connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
+(def connection (clj-slack.core/create-connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
 (clj-slack.stars/list connection {:count "2" :page "3"})
+(clj-slack.core/stop connection)
 ```
 
 Uploading a file:
@@ -43,8 +47,9 @@ Uploading a file:
 (require 'clj-slack.core)
 (require 'clj-slack.files)
 
-(def connection (clj-slack.core/connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
+(def connection (clj-slack.core/create-connection "https://slack.com/api" {:app "APP TOKEN" :bot "BOT TOKEN"})
 (clj-slack.files/upload connection (clojure.java.io/input-stream "/path/to/file/file.ext") {:channels "CHANNEL_ID", :title "This is a file.})
+(clj-slack.core/stop connection)
 ```
 
 ## License
