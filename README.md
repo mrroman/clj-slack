@@ -12,40 +12,37 @@ clj-slack documentation is available [here](http://julienblanchard.com/clj-slack
 
 ## Usage
 
-This is on [Clojars](https://clojars.org/org.julienxx/clj-slack) of course. Just add ```[org.julienxx/clj-slack "0.5.3"]``` to your ```:dependencies``` in your project.clj file.
+This is on [Clojars](https://clojars.org/mrroman/clj-slack). Just add ```[mrroman/clj-slack "0.6.0-SNAPSHOT"]``` to your ```:dependencies``` in your project.clj file.
 
 Get your access token [here](https://api.slack.com/web).
 
-Your need to create a connection map like ```{:api-url "https://slack.com/api" :token "YOUR TOKEN"}``` and pass it as the first argument of every functions in clj-slack. Of course you can change api-url for debugging or testing purposes.
+Your need to create a connection map like ```{:api-url "https://slack.com/api" :tokens {:app "APP TOKEN" :bot "BOT TOKEN"}``` and pass it as the first argument of every functions in clj-slack. Almost every call needs APP TOKEN. Only rtm/start needs BOT TOKEN. You can use your test token for both of these tokens. Of course you can change api-url for debugging or testing purposes.
 
 clj-slack will throw an Exception if the connection map you're trying to use is not valid.
 
 Example:
 ```clojure
 (require 'clj-slack.users)
-(def connection {:api-url "https://slack.com/api" :token "YOUR TOKEN"})
+(def connection {:api-url "https://slack.com/api" :tokens {:app "YOUR TOKEN"}})
 (clj-slack.users/list connection)
 ```
 
 You can use optional params described in [Slack API](https://api.slack.com/methods) by passing them through a map.
 ```clojure
 (require 'clj-slack.stars)
-(def connection {:api-url "https://slack.com/api" :token "YOUR TOKEN"})
+(def connection {:api-url "https://slack.com/api" :tokens {:app "YOUR TOKEN"}})
 (clj-slack.stars/list connection {:count "2" :page "3"})
 ```
 
 Uploading a file:
 ```clojure
 (require 'clj-slack.files)
-(def connection {:api-url "https://slack.com/api" :token "YOUR TOKEN"})
+(def connection {:api-url "https://slack.com/api" :tokens {:app "YOUR TOKEN"}})
 (clj-slack.files/upload connection (clojure.java.io/input-stream "/path/to/file/file.ext") {:channels "CHANNEL_ID", :title "This is a file.})
 ```
 
-## To Do
-- Add tests
-
 ## License
 
-Copyright (C) 2014-2015 Julien Blanchard
+Copyright (C) Julien Blanchard, Konrad Mrożek
 
 Distributed under the Eclipse Public License, the same as Clojure.

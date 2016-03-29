@@ -1,5 +1,5 @@
 (ns clj-slack.team
-  (:require [clj-slack.core :refer [slack-request stringify-keys]]))
+  (:require [clj-slack.core :refer [app-request]]))
 
 (defn access-log
   "Gets the access logs for the current team.
@@ -7,13 +7,11 @@
   count: number of items to return per page
   page: page number of results to return"
   ([connection]
-    (slack-request connection "team.accessLogs"))
+    (app-request connection "team.accessLogs"))
   ([connection optionals]
-   (->> optionals
-        stringify-keys
-        (slack-request connection "team.accessLogs"))))
+   (app-request connection "team.accessLogs" optionals)))
 
 (defn info
   "Gets information about the current team."
   [connection]
-  (slack-request connection "team.info"))
+  (app-request connection "team.info"))

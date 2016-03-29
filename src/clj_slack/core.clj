@@ -3,6 +3,11 @@
    [clj-http.client :as http]
    [cheshire.core :as cheshire]))
 
+(def ^:dynamic *error-handler*
+  "Error handler for all slack requests. It takes error msg
+  and the context of an error. Can be redefined with bind."
+  (fn [msg ctx] (throw (ex-info msg ctx))))
+
 (defn- verify-api-url
   [connection]
   (assert
@@ -23,7 +28,8 @@
   (let [response (http/get url {:query-params params})]
     (if-let [body (:body response)]
       (cheshire/parse-string body true)
-      (*error-handler* (:error response)))))
+      (*error-handler* (:error response) {:url url
+                                          :params params}))))
 
 (defn- send-post-request
   "Sends a POST http request with formatted params"
@@ -61,3 +67,21 @@
                                stringify-keys
                                build-multiparts)]
     (send-post-request url multiparts-params)))
+
+(defn- req
+  ([token-key requestor connection endpoint]
+   (req token-key requestor connection endpoint {}))
+  ([token-key requestor connection endpoint query]
+   (let [token (some-> connection :tokens token-key)]
+     (assert token (str token-key " not defined in connection tokens"))
+     (let [resp (requestor connection endpoint (assoc query :token token))]
+       (if (:ok resp)
+         resp
+         (*error-handler* (:error resp) {:endpoint endpoint
+                                         :query query
+                                         :response resp}))))))
+
+(def app-request (partial req :app slack-request))
+(def app-post-request (partial req :app slack-post-request))
+(def bot-request (partial req :bot slack-request))
+(def bot-post-request (partial req :bot slack-post-request))

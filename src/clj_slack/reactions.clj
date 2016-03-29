@@ -1,5 +1,5 @@
 (ns clj-slack.reactions
-  (:require [clj-slack.core :refer [slack-request stringify-keys]]))
+  (:require [clj-slack.core :refer [app-request]]))
 
 (defn add
   "Adds a reaction to an item.
@@ -12,9 +12,8 @@
   - timestamp: timestamp of the message to add reaction to"
   [connection name optionals]
   (->> optionals
-       stringify-keys
        (merge {"name" name})
-       (slack-request connection "reactions.add")))
+       (app-request connection "reactions.add")))
 
 (defn get
   "Gets reactions for an item.
@@ -24,9 +23,7 @@
   - timestamp: timestamp of the message to get reactions to
   - full: if true always return the complete reaction list"
   [connection optionals]
-  (->> optionals
-       stringify-keys
-       (slack-request connection "reactions.get")))
+  (app-request connection "reactions.get" optionals))
 
 (defn list
   "Lists reactions made by a user.
@@ -35,9 +32,7 @@
   - count: number of items to return per page
   - page: page number of results to return."
   [connection optionals]
-  (->> optionals
-       stringify-keys
-       (slack-request connection "reactions.list")))
+  (app-request connection "reactions.list" optionals))
 
 (defn remove
   "Removes a reaction from an item.
@@ -47,6 +42,5 @@
   - timestamp: timestamp of the message to remove reaction from"
   [connection name optionals]
   (->> optionals
-       stringify-keys
        (merge {"name" name})
-       (slack-request connection "reactions.add")))
+       (app-request connection "reactions.add")))

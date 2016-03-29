@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [clj-slack.team :refer :all]))
 
-(def connection {:api-url "https://slack.com/api" :token (System/getenv "TOKEN")})
+(def connection {:api-url "https://slack.com/api" :tokens {:app (System/getenv "TOKEN")}})
 
 (defn missing-scope? [response]
   (= "missing_scope" (:error response)))

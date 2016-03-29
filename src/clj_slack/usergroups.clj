@@ -1,6 +1,6 @@
 (ns clj-slack.usergroups
   (:refer-clojure :exclude [update])
-  (:require [clj-slack.core :refer [slack-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list update]))
 
 (defn create
@@ -15,9 +15,8 @@
   ([connection name optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"name" name})
-    (slack-request connection "usergroups.create"))))
+    (app-request connection "usergroups.create"))))
 
 (defn disable
   "Disable an existing user group
@@ -28,9 +27,8 @@
   ([connection usergroup optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"usergroup" usergroup})
-    (slack-request connection "usergroups.disable"))))
+    (app-request connection "usergroups.disable"))))
 
 (defn enable
   "Enable a user group
@@ -41,9 +39,8 @@
   ([connection usergroup optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"usergroup" usergroup})
-    (slack-request connection "usergroups.enable"))))
+    (app-request connection "usergroups.enable"))))
 
 (defn list
   "List all user groups for a team
@@ -54,10 +51,7 @@
   ([connection]
    (list connection {}))
   ([connection optionals]
-   (->>
-    optionals
-    stringify-keys
-    (slack-request connection "usergroups.list"))))
+   (app-request connection "usergroups.list" optionals)))
 
 (defn update
   "Update an existing user group
@@ -72,6 +66,5 @@
   ([connection usergroup optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"usergroup" usergroup})
-    (slack-request connection "usergroups.update"))))
+    (app-request connection "usergroups.update"))))

@@ -1,5 +1,5 @@
 (ns clj-slack.pins
-  (:require [clj-slack.core :refer [slack-request  stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list remove]))
 
 (defn add
@@ -11,14 +11,13 @@
   - timestamp: timestamp of the message to pin"
   [connection channel-id optionals]
   (->> optionals
-       stringify-keys
        (merge {"channel" channel-id})
-       (slack-request connection "pins.add")))
+       (app-request connection "pins.add")))
 
 (defn list
   "List items pinned to a channel."
   [connection channel-id]
-  (slack-request connection "pins.list" {"channel" channel-id}))
+  (app-request connection "pins.list" {"channel" channel-id}))
 
 (defn remove
   "Un-Pins an item to a channel (file, file comment, channel message, or group message)
@@ -29,6 +28,5 @@
   - timestamp: timestamp of the message to un-pin"
   [connection channel-id optionals]
   (->> optionals
-       stringify-keys
        (merge {"channel" channel-id})
-       (slack-request connection "pins.remove")))
+       (app-request connection "pins.remove")))

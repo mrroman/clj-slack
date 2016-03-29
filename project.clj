@@ -1,5 +1,5 @@
-(defproject mrroman/clj-slack "0.5.3"
-  :description "Slack REST API wrapper"
+(defproject mrroman/clj-slack "0.6.0-SNAPSHOT"
+  :description "Fork of Slack REST API wrapper from Julien Blanchard (http://github.com/julienXX/clj-slack)"
   :url "http://github.com/mrroman/clj-slack"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

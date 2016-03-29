@@ -1,5 +1,5 @@
 (ns clj-slack.stars
-  (:require [clj-slack.core :refer [slack-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list]))
 
 (defn list
@@ -11,6 +11,4 @@
   ([connection]
    (list connection {}))
   ([connection optionals]
-   (->> optionals
-        stringify-keys
-        (slack-request connection "stars.list"))))
+   (app-request connection "stars.list" optionals)))
