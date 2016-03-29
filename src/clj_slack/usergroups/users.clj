@@ -1,7 +1,7 @@
 (ns clj-slack.usergroups.users
   (:refer-clojure :exclude [update])
   (:require clojure.string
-            [clj-slack.core :refer [slack-request stringify-keys]])
+            [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list update]))
 
 (defn list
@@ -13,9 +13,8 @@
   ([connection usergroup optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"usergroup" usergroup})
-    (slack-request connection "usergroups.users.list"))))
+    (app-request connection "usergroups.users.list"))))
 
 (defn update
   "Update the list of users for a user group
@@ -26,7 +25,6 @@
   ([connection usergroup users optionals]
    (->>
     optionals
-    stringify-keys
     (merge {"usergroup" usergroup,
             "users" (clojure.string/join \, users)})
-    (slack-request connection "usergroups.users.update"))))
+    (app-request connection "usergroups.users.update"))))

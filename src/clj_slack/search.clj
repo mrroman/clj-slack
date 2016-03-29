@@ -1,5 +1,5 @@
 (ns clj-slack.search
-  (:require [clj-slack.core :refer [slack-request stringify-keys]]))
+  (:require [clj-slack.core :refer [app-request]]))
 
 (defn all
   "Searches for messages and files matching a query.
@@ -13,9 +13,8 @@
    (all connection query {}))
   ([connection query optionals]
    (->> optionals
-        stringify-keys
         (merge {"query" query})
-        (slack-request connection "search.all"))))
+        (app-request connection "search.all"))))
 
 (defn files
   "Searches for files matching a query.
@@ -29,9 +28,8 @@
    (files connection query {}))
   ([connection query optionals]
    (->> optionals
-        stringify-keys
         (merge {"query" query})
-        (slack-request connection "search.files"))))
+        (app-request connection "search.files"))))
 
 (defn messages
   "Searches for messages matching a query.
@@ -45,6 +43,5 @@
    (messages connection query {}))
   ([connection query optionals]
    (->> optionals
-        stringify-keys
         (merge {"query" query})
-        (slack-request connection "search.messages"))))
+        (app-request connection "search.messages"))))

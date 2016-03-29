@@ -1,11 +1,11 @@
 (ns clj-slack.files
-  (:require [clj-slack.core :refer [slack-request slack-post-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request app-post-request]])
   (:refer-clojure :exclude [list]))
 
 (defn delete
   "Deletes a file from your team."
   [connection file-id]
-  (slack-request connection "files.delete" {"file" file-id}))
+  (app-request connection "files.delete" {"file" file-id}))
 
 (defn info
   "Gets information about a team file.
@@ -16,9 +16,8 @@
    (info connection file-id {}))
   ([connection file-id optionals]
    (->> optionals
-        stringify-keys
         (merge {"file" file-id})
-        (slack-request connection "files.info"))))
+        (app-request connection "files.info"))))
 
 (defn list
   "Lists & filters team files.
@@ -32,9 +31,7 @@
   ([connection]
    (list connection {}))
   ([connection optionals]
-   (->> optionals
-        stringify-keys
-        (slack-request connection "files.list"))))
+   (app-request connection "files.list" optionals)))
 
 (defn upload
   "Creates or uploads an existing file. Content can be a String, File or InputStream
@@ -47,10 +44,8 @@
   ([connection content]
    (upload connection content {}))
   ([connection content optionals]
-   (let [params (->> optionals
-                     stringify-keys)]
-     (if (string? content)
-       ;; if content is string use get request (e.g. post a snippet)
-       (slack-request connection "files.upload" (merge params {"content" content}))
-       ;; otherwise assume it is a file or an inputstream and use post
-       (slack-post-request connection "files.upload" (merge params {"file" content}))))))
+   (if (string? content)
+     ;; if content is string use get request (e.g. post a snippet)
+     (app-request connection "files.upload" (merge optionals {"content" content}))
+     ;; otherwise assume it is a file or an inputstream and use post
+     (app-post-request connection "files.upload" (merge optionals {"file" content})))))

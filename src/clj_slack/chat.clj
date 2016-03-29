@@ -1,6 +1,6 @@
 (ns clj-slack.chat
   (:refer-clojure :exclude [update])
-  (:require [clj-slack.core :refer [slack-request slack-post-request stringify-keys]]
+  (:require [clj-slack.core :refer [app-request app-post-request]]
             [clojure.data.json :refer [write-str]]))
 
 (defn- serialize-attachments [options]
@@ -12,7 +12,7 @@
 (defn delete
   "Deletes a message."
   [connection timestamp channel-id]
-  (slack-request connection "chat.delete" {"ts" timestamp "channel" channel-id}))
+  (app-request connection "chat.delete" {"ts" timestamp "channel" channel-id}))
 
 (defn post-message
   "Sends a message to a channel.
@@ -31,12 +31,11 @@
   ([connection channel-id text optionals]
    (->> optionals
         serialize-attachments
-        stringify-keys
         (merge {"channel" channel-id
                 "text" text})
-        (slack-post-request connection "chat.postMessage"))))
+        (app-post-request connection "chat.postMessage"))))
 
 (defn update
   "Sends a message to a channel."
   [connection timestamp channel-id text]
-  (slack-request connection "chat.update" {"ts" timestamp "channel" channel-id "text" text}))
+  (app-request connection "chat.update" {"ts" timestamp "channel" channel-id "text" text}))

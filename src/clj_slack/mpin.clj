@@ -1,11 +1,11 @@
 (ns clj-slack.mpin
-  (:require [clj-slack.core :refer [slack-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list]))
 
 (defn close
   "Closes a multiparty direct message channel."
   [connection channel-id]
-  (slack-request connection "mpin.close" {"channel" channel-id}))
+  (app-request connection "mpin.close" {"channel" channel-id}))
 
 (defn history
   "Fetches history of messages and events from a multiparty direct message.`
@@ -19,21 +19,20 @@
    (history connection channel-id {}))
   ([connection channel-id optionals]
    (->> optionals
-        stringify-keys
         (merge {"channel" channel-id})
-        (slack-request connection "mpin.history"))))
+        (app-request connection "mpin.history"))))
 
 (defn list
   "Lists multiparty direct message channels for the calling user."
   [connection]
-  (slack-request connection "mpin.list"))
+  (app-request connection "mpin.list"))
 
 (defn mark
   "Sets the read cursor in a multiparty direct message channel."
   [connection channel-id timestamp]
-  (slack-request connection "mpin.mark" {"channel" channel-id "ts" timestamp}))
+  (app-request connection "mpin.mark" {"channel" channel-id "ts" timestamp}))
 
 (defn open
   "This method opens a multiparty direct message."
   [connection user-id]
-  (slack-request connection "mpin.open" {"user" user-id}))
+  (app-request connection "mpin.open" {"user" user-id}))

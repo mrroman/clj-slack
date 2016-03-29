@@ -1,11 +1,11 @@
 (ns clj-slack.im
-  (:require [clj-slack.core :refer [slack-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [list]))
 
 (defn close
   "Closes a direct message channel."
   [connection channel-id]
-  (slack-request connection "im.close" {"channel" channel-id}))
+  (app-request connection "im.close" {"channel" channel-id}))
 
 (defn history
   "Fetches history of messages and events from direct message channel.
@@ -18,21 +18,20 @@
    (history connection channel-id {}))
   ([connection channel-id optionals]
    (->> optionals
-        stringify-keys
         (merge {"channel" channel-id})
-        (slack-request connection "im.history"))))
+        (app-request connection "im.history"))))
 
 (defn list
   "Lists direct message channels for the calling user."
   [connection]
-  (slack-request connection "im.list"))
+  (app-request connection "im.list"))
 
 (defn mark
   "Sets the read cursor in a direct message channel."
   [connection channel-id timestamp]
-  (slack-request connection "im.mark" {"channel" channel-id "ts" timestamp}))
+  (app-request connection "im.mark" {"channel" channel-id "ts" timestamp}))
 
 (defn open
   "Opens a direct message channel."
   [connection user-id]
-  (slack-request connection "im.open" {"user" user-id}))
+  (app-request connection "im.open" {"user" user-id}))

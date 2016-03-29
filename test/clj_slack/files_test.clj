@@ -3,7 +3,7 @@
             [clj-slack.files :refer :all])
   (:refer-clojure :exclude [list]))
 
-(def connection {:api-url "https://slack.com/api" :token (System/getenv "TOKEN")})
+(def connection {:api-url "https://slack.com/api" :tokens {:app (System/getenv "TOKEN")}})
 
 (deftest file-upload
   (testing "Uploading a file"

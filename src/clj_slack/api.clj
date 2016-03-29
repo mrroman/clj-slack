@@ -1,5 +1,5 @@
 (ns clj-slack.api
-  (:require [clj-slack.core :refer [slack-request stringify-keys]])
+  (:require [clj-slack.core :refer [app-request]])
   (:refer-clojure :exclude [test]))
 
 (defn test
@@ -10,6 +10,4 @@
   ([connection]
    (test connection {}))
   ([connection optionals]
-   (->> optionals
-        stringify-keys
-        (slack-request connection "api.test"))))
+   (app-request connection "api.test" optionals)))
