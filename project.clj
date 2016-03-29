@@ -1,9 +1,8 @@
-(defproject org.julienxx/clj-slack "0.5.3"
+(defproject mrroman/clj-slack "0.5.3"
   :description "Slack REST API wrapper"
-  :url "http://github.com/julienXX/clj-slack"
+  :url "http://github.com/mrroman/clj-slack"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [clj-http "2.0.0"]
-                 [org.clojure/data.json "0.2.5"]
-                 [org.clojure/tools.logging "0.3.1"]])
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [clj-http "2.1.0"]
+                 [cheshire "5.5.0"]])
