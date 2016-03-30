@@ -1,12 +1,12 @@
 (ns clj-slack.chat
   (:refer-clojure :exclude [update])
   (:require [clj-slack.core :refer [app-request app-post-request]]
-            [clojure.data.json :refer [write-str]]))
+            [cheshire.core :refer [encode]]))
 
 (defn- serialize-attachments [options]
   (let [attachments (:attachments options)]
     (if (and attachments (not (string? attachments)))
-      (assoc options :attachments (write-str attachments))
+      (assoc options :attachments (encode attachments))
       options)))
 
 (defn delete
